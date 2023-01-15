@@ -79,9 +79,9 @@ API_KEY_HEADER='x-logtrust-domain-apikey'
 no_error() {
   local msg code
   if [[ $(echo "${1}" | jq 'type!="array" and has("error")') == true ]]; then
-  	if [[ $(echo "${1}" | jq 'has("cid")') == true ]]; then
-  		msg=$(echo "${1}" | jq -r '.object[]') && error "${msg}"
-  	else
+    if [[ $(echo "${1}" | jq 'has("cid")') == true ]]; then
+      msg=$(echo "${1}" | jq -r '.object[]') && error "${msg}"
+    else
       msg=$(echo "${1}" | jq -r '.error.message')
       code=$(echo "${1}" | jq '.error.code')
       error "${code}: ${msg}"
@@ -97,88 +97,88 @@ get_length() {
 
 
 create_signature() {
-	local data='' msg
-	(( $# > 0 )) && data="${1}"
-	timestamp=$(echo "$(date +%s) * 1000" | bc)
-	msg="${DEVO_API_KEY}${data}${timestamp}"
-	signature=$(echo -n "${msg}" | openssl dgst -sha256 -hmac "${DEVO_API_SECRET}" | awk '{ print $NF }')
+  local data='' msg
+  (( $# > 0 )) && data="${1}"
+  timestamp=$(echo "$(date +%s) * 1000" | bc)
+  msg="${DEVO_API_KEY}${data}${timestamp}"
+  signature=$(echo -n "${msg}" | openssl dgst -sha256 -hmac "${DEVO_API_SECRET}" | awk '{ print $NF }')
 }
 
 
 get_users() {
-	curl -sS --connect-timeout 10 -X GET "${PROBIO_URL}/user/domain/${DEVO_DOMAIN}" \
-			 -H "Content-Type: application/json" \
-    	 -H "${API_KEY_HEADER}: ${DEVO_API_KEY}" \
-    	 -H "x-logtrust-timestamp: ${timestamp}" \
-    	 -H "x-logtrust-sign: ${signature}" \
-    	 -d "" 2>&1
+  curl -sS --connect-timeout 10 -X GET "${PROBIO_URL}/user/domain/${DEVO_DOMAIN}" \
+       -H "Content-Type: application/json" \
+       -H "${API_KEY_HEADER}: ${DEVO_API_KEY}" \
+       -H "x-logtrust-timestamp: ${timestamp}" \
+       -H "x-logtrust-sign: ${signature}" \
+       -d "" 2>&1
 }
 
 
 get_active_users() {
-	local users
-	create_signature
-	users=$(get_users)
-	if [[ "${users}" =~ "curl:" ]]; then
-		error "$(echo "${users}" | awk 'NR==1')" && exit 1
-	fi
-	no_error "${users}" && echo "${users}" | jq 'map(select(.status=="active"))' || exit 1
+  local users
+  create_signature
+  users=$(get_users)
+  if [[ "${users}" =~ "curl:" ]]; then
+    error "$(echo "${users}" | awk 'NR==1')" && exit 1
+  fi
+  no_error "${users}" && echo "${users}" | jq 'map(select(.status=="active"))' || exit 1
 }
 
 
 get_logged_users() {
-	local query users
-	query='{"query":"from siem.logtrust.web.activity group every - select collectdistinct(username) as user","from":"'${FROM}'","to":"now","mode":{"type":"json/simple"}}'
-	create_signature "${query}"
-	users=$(curl -sS --connect-timeout 10 -X POST "${QUERY_API_URL}" \
+  local query users
+  query='{"query":"from siem.logtrust.web.activity group every - select collectdistinct(username) as user","from":"'${FROM}'","to":"now","mode":{"type":"json/simple"}}'
+  create_signature "${query}"
+  users=$(curl -sS --connect-timeout 10 -X POST "${QUERY_API_URL}" \
                -H "Content-Type: application/json" \
                -H "x-logtrust-apikey: ${DEVO_API_KEY}" \
                -H "x-logtrust-timestamp: ${timestamp}" \
                -H "x-logtrust-sign: ${signature}" \
                -d "${query}")
-	no_error "${users}" && echo "${users}" | jq '.user' || exit 1
+  no_error "${users}" && echo "${users}" | jq '.user' || exit 1
 }
 
 
 get_inactive_users() {
-	local activeUsers loggedUsers len noun='users' verb='have'
-	activeUsers=$(get_active_users)
-	loggedUsers=$(get_logged_users)
-	len=$(get_length "${activeUsers}")
-	(( len == 1 )) && noun='user'
-	printf '%b' "${INFO} ${len} active ${noun} found."
-	# Ignore domain owner 
-	activeUsers=$(echo "${activeUsers}" | jq 'map(select(.owner == false) | .email)')
-	inactiveUsers=$(jq -n "$activeUsers - $loggedUsers")
-	len_inactive=$(get_length "${inactiveUsers}")
-	(( len_inactive == 0 )) && printf '%b' "\n${CROSS} All users have logged in to Devo. Nothing to do :)" && exit 1
-	(( len_inactive == 1 )) && noun='user' verb='has'
-	printf '%b' "\n${INFO} ${len_inactive} ${noun} ${verb} not logged in to Devo:\n\n"
-	echo "${inactiveUsers}" | jq -rc '.[]'
+  local activeUsers loggedUsers len noun='users' verb='have'
+  activeUsers=$(get_active_users)
+  loggedUsers=$(get_logged_users)
+  len=$(get_length "${activeUsers}")
+  (( len == 1 )) && noun='user'
+  printf '%b' "${INFO} ${len} active ${noun} found."
+  # Ignore domain owner 
+  activeUsers=$(echo "${activeUsers}" | jq 'map(select(.owner == false) | .email)')
+  inactiveUsers=$(jq -n "$activeUsers - $loggedUsers")
+  len_inactive=$(get_length "${inactiveUsers}")
+  (( len_inactive == 0 )) && printf '%b' "\n${CROSS} All users have logged in to Devo. Nothing to do :)" && exit 1
+  (( len_inactive == 1 )) && noun='user' verb='has'
+  printf '%b' "\n${INFO} ${len_inactive} ${noun} ${verb} not logged in to Devo:\n\n"
+  echo "${inactiveUsers}" | jq -rc '.[]'
 }
 
 
 disable_users() {
-	local msg='Users' users
-	get_inactive_users
-	for user in $(echo "${inactiveUsers}" | jq -rc '.[]'); do
-		create_signature
-		users=$(curl -sS --connect-timeout 10 -X POST "${PROBIO_URL}/user/email/${user}/domain/${DEVO_DOMAIN}/disable" \
-	    					 -H "Content-Type: application/json" \
-	    					 -H "${API_KEY_HEADER}: ${DEVO_API_KEY}" \
-	    					 -H "x-logtrust-timestamp: ${timestamp}" \
-	    					 -H "x-logtrust-sign: ${signature}" \
-	    					 -d "")
-	done
-	if no_error "${users}"; then
-		(( len_inactive == 1 )) && msg='User'
-  	printf '%b' "\n${TICK} ${GR}${msg} succesfully disabled.${NC}"
+  local msg='Users' users
+  get_inactive_users
+  for user in $(echo "${inactiveUsers}" | jq -rc '.[]'); do
+    create_signature
+    users=$(curl -sS --connect-timeout 10 -X POST "${PROBIO_URL}/user/email/${user}/domain/${DEVO_DOMAIN}/disable" \
+	         -H "Content-Type: application/json" \
+	         -H "${API_KEY_HEADER}: ${DEVO_API_KEY}" \
+	         -H "x-logtrust-timestamp: ${timestamp}" \
+	         -H "x-logtrust-sign: ${signature}" \
+	         -d "")
+  done
+  if no_error "${users}"; then
+    (( len_inactive == 1 )) && msg='User'
+    printf '%b' "\n${TICK} ${GR}${msg} succesfully disabled.${NC}"
   fi
 }
 
 
 main() {
-	disable_users
+  disable_users
 }
 
 main "$@"
