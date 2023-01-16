@@ -49,9 +49,11 @@ declare -r NC='\e[0m'
 declare -r GR='\e[0;32m'
 declare -r BG='\e[1;32m'
 declare -r BR='\e[1;31m'
+declare -r GY='\e[0;90m'
+declare -r CY='\e[0;36m'
 declare -r TICK="[${BG}✓${NC}]"
 declare -r CROSS="[${BR}×${NC}]"
-declare -r INFO='[i]'
+declare -r INFO="[${GY}i${NC}]"
 declare -i timestamp
 declare -r PROBIO_URL="https://api-${DEVO_CLOUD}.devo.com/probio"
 declare -r QUERY_API_URL="https://apiv2-${DEVO_CLOUD}.devo.com/search/query"
@@ -146,14 +148,14 @@ get_inactive_users() {
   loggedUsers=$(get_logged_users)
   len=$(get_length "${activeUsers}")
   (( len == 1 )) && noun='user'
-  printf '%b' "${INFO} ${len} active ${noun} found."
+  printf '%b' "${INFO} ${CY}${len}${NC} active ${noun} found."
   # Ignore domain owner 
   activeUsers=$(echo "${activeUsers}" | jq 'map(select(.owner == false) | .email)')
   inactiveUsers=$(jq -n "$activeUsers - $loggedUsers")
-  len_inactive=$(get_length "${inactiveUsers}")
-  (( len_inactive == 0 )) && printf '%b' "\n${CROSS} All users have logged in to Devo. Nothing to do :)" && exit 1
-  (( len_inactive == 1 )) && noun='user' verb='has'
-  printf '%b' "\n${INFO} ${len_inactive} ${noun} ${verb} not logged in to Devo:\n\n"
+  length=$(get_length "${inactiveUsers}")
+  (( length == 0 )) && printf '%b' "\n${CROSS} All users have logged in to Devo. Nothing to do :)" && exit 1
+  (( length == 1 )) && noun='user' verb='has'
+  printf '%b' "\n${INFO} ${CY}${length}${NC} ${noun} ${verb} not logged in to Devo:\n\n"
   echo "${inactiveUsers}" | jq -rc '.[]'
 }
 
@@ -171,7 +173,7 @@ disable_users() {
 	         -d "")
   done
   if no_error "${users}"; then
-    (( len_inactive == 1 )) && msg='User'
+    (( length == 1 )) && msg='User'
     printf '%b' "\n${TICK} ${GR}${msg} successfully disabled.${NC}"
   fi
 }
