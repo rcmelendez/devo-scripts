@@ -172,7 +172,7 @@ disable_users() {
   done
   if no_error "${users}"; then
     (( len_inactive == 1 )) && msg='User'
-    printf '%b' "\n${TICK} ${GR}${msg} succesfully disabled.${NC}"
+    printf '%b' "\n${TICK} ${GR}${msg} successfully disabled.${NC}"
   fi
 }
 
