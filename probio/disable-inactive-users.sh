@@ -10,7 +10,7 @@
 # Version:       1.0.0
 # Author:        Roberto Meléndez  [Cambridge, USA]
 # Github:        https://github.com/rcmelendez/devo-scripts/probio/
-# Devo Connect:  https://community.devo.com/community
+# Devo Connect:  https://community.devo.com/general-knowledge-91/disabling-inactive-users-from-a-devo-domain-using-a-bash-script-512
 # Released:      January 15, 2023
 
 
