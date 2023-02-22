@@ -6,7 +6,7 @@
 # Version:      1.0.3
 # Author:       Roberto Meléndez  [Cambridge, USA]
 # Github:       https://github.com/rcmelendez/devo-scripts/probio/
-# API Doc:      https://docs.devo.com/confluence/ndt/latest/api-reference/provisioning-api
+# API Doc:      https://docs.devo.com/space/latest/177864705/Provisioning+API
 # Devo Connect: https://community.devo.com/data-ingestion-68/how-to-run-provisioning-api-requests-with-a-bash-script-125
 # Released:     June 9, 2021
 # Updated:      Feburary 20, 2023
@@ -85,7 +85,7 @@ declare -r OPERATION=/domain
 declare -r DATA=''
 
 # Create a new domain
-#declare -r DATA='{"name":"roberto_test","plan":"child","time":0.03333333333333333,"volume":0.5},"status":"Active"'
+#declare -r DATA='{"name":"roberto_test","plan":"child","time":0.03333333333333333,"volume":0.5,"status":"Active"}'
 
 # Create a new role
 #declare -r DATA='{"name": "Devo Users", "description": "Devo Users role created via Provisioning API", "policies": ["*"]}'
