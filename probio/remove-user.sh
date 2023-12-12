@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # 
-# Bash shell script that removes a user from a domain using the Devo Provisioning API.
+# Bash shell script that removes a user from an MSSP domain using the Devo Provisioning API.
 # 
 #
-# Version:  1.0.0
+# Version:  1.0.1
 # Author:   Roberto Meléndez  [Cambridge, USA] 
 # API Doc:  https://docs.devo.com/space/latest/177864705/Provisioning+API
 # Released: December 11, 2023
@@ -19,7 +19,7 @@ declare -r DEVO_API_SECRET=YOUR-MSSP-API-SECRET-GOES-HERE
 declare -r DEVO_CLOUD=us
 declare -r ENDPOINT=https://api-${DEVO_CLOUD}.devo.com/probio
 declare -r USER=roberto@example.com
-declare -r DOMAIN=("domain@reseller")  # It also works for regular domains
+declare -r DOMAIN=("domain@reseller")
 
 
 #######################################
