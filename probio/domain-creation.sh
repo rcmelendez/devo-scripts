@@ -4,7 +4,7 @@
 # assigns a domain owner using the Devo Provisioning API.
 # 
 #
-# Version:  1.0.0
+# Version:  1.0.1
 # Author:   Roberto Meléndez  [Cambridge, USA] 
 # API Doc:  https://docs.devo.com/space/latest/177864705/Provisioning+API
 # Released: December 1, 2023
@@ -44,6 +44,7 @@ http_request() {
        -d "${data}"
 }
 
+
 add_user() {
   local user="${1}"
   local domain="${2}"
@@ -66,7 +67,7 @@ get_users() {
 
 
 get_users_domains(){
-  for domain in "$@"; do
+  for domain in "${DOMAINS[@]}"; do
     get_users "${domain}"
   done
 }
@@ -83,7 +84,7 @@ create_domain() {
 
 
 create_domains() {
-  for domain in "$@"; do
+  for domain in "${DOMAINS[@]}"; do
     create_domain "${domain}"
     add_user "${OWNER}" "${domain}" "OWNER"
   done
@@ -100,7 +101,7 @@ get_domain() {
 
 
 get_domains() {
-  for domain in "$@"; do
+  for domain in "${DOMAINS[@]}"; do
     get_domain "${domain}"
   done
 }
